@@ -3,9 +3,6 @@ package fr.hadriel.empires;
 import fr.hadriel.Perlin;
 
 import java.awt.*;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.Random;
 
 public class Terrain {
 
@@ -34,13 +31,18 @@ public class Terrain {
                 locations[x + y * width] = new Location(this, x, y, h, a);
             }
         }
+
+        System.out.println("Planting trees");
+        update(100f);
+
+        System.out.println("Terrain ready");
     }
 
     private float[] CreateHeightMap(float scale, int octaves, float persistence, float lacunarity) {
         float[] map = new float[width * height];
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                map[x + y * width] = Perlin.OctaveNoise(x, y, 0, scale, octaves, persistence, lacunarity);
+                map[x + y * width] = Perlin.OctaveNoise(x, y, seed, scale, octaves, persistence, lacunarity);
             }
         }
 
@@ -64,7 +66,7 @@ public class Terrain {
     private float[] CreateAridityMap(float[] heightMap) {
         float[] map = new float[width * height];
 
-        int checkDistance = (int) Math.sqrt(Location.ARIDITY_THRESHOLD) + 1;
+        int checkDistance = (int) Location.ARIDITY_DESERT_THRESHOLD;
 
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
@@ -78,12 +80,12 @@ public class Terrain {
                 if (locationHeight > Location.SNOW_HEIGHT) continue;
 
                 //Find min Distance to water
-                float minDistance = Location.ARIDITY_THRESHOLD;
+                float minDistance = Location.ARIDITY_DESERT_THRESHOLD * Location.ARIDITY_DESERT_THRESHOLD;
                 for (int dx =  -checkDistance; dx <= +checkDistance; dx++) {
                     for (int dy =  -checkDistance; dy <= +checkDistance; dy++) {
                         //Identifiy Target
                         int tx = x + dx;
-                        int ty = y + dx;
+                        int ty = y + dy;
 
                         //Avoid ArrayOutOfBoundException
                         if (tx < 0 || tx >= width) continue;
@@ -94,13 +96,13 @@ public class Terrain {
                         if (tHeight > Location.OCEAN_HEIGHT) continue;
 
                         //Check for shorter source of water
-                        float d = dx*dx + dy*dy;
+                        float d = dx * dx + dy * dy;
                         if (d < minDistance) minDistance = d;
                     }
                 }
 
                 //Setup map
-                map[x + y * width] = minDistance;
+                map[x + y * width] = (float) Math.sqrt(minDistance) / Location.ARIDITY_DESERT_THRESHOLD;
             }
         }
         return map;
@@ -116,6 +118,12 @@ public class Terrain {
         for (Location location : locations) {
             g.setColor(location.getColor());
             g.fillRect(location.x, location.y, 1, 1);
+        }
+    }
+
+    public void update(float deltaTime) {
+        for (Location location : locations) {
+            location.update(deltaTime);
         }
     }
 }

@@ -81,7 +81,7 @@ public class Perlin {
             float sampleY = y / scale * frequency;
             float sampleZ = z / scale * frequency;
 
-            height += Noise(sampleX, sampleY, sampleZ) * 0.5f + 0.5f;
+            height += (Noise(sampleX, sampleY, sampleZ) * 0.5f + 0.5f) * amplitude;
 
             amplitude *= persistence;
             frequency *= lacunarity;

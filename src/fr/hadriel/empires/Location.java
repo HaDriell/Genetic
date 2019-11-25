@@ -11,25 +11,16 @@ public class Location {
     // Color Settings //////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////
 
-    private static final int DESERT_COLOR_R = 200;
-    private static final int DESERT_COLOR_G = 200;
-    private static final int DESERT_COLOR_B = 128;
+    private static final Color LOW_GRASS_COLOR = new Color(24, 48, 26);
+    private static final Color HIGH_GRASS_COLOR = new Color(103, 160, 85);
 
-    private static final int LOW_GRASS_COLOR_R = 30;
-    private static final int LOW_GRASS_COLOR_G = 189;
-    private static final int LOW_GRASS_COLOR_B = 38;
+    private static final Color DESERT_COLOR = new Color(220, 220, 150);
 
-    private static final int HIGH_GRASS_COLOR_R = 87;
-    private static final int HIGH_GRASS_COLOR_G = 153;
-    private static final int HIGH_GRASS_COLOR_B = 91;
+    private static final Color SNOW_COLOR = new Color(255, 255, 255);
 
-    private static final int SNOW_COLOR_R = 255;
-    private static final int SNOW_COLOR_G = 255;
-    private static final int SNOW_COLOR_B = 255;
-
-    private static final int WATER_COLOR_R = 64;
-    private static final int WATER_COLOR_G = 64;
-    private static final int WATER_COLOR_B = 255;
+    private static final Color HIGH_WATER_COLOR = new Color(128, 128, 225);
+    private static final Color MEDIUM_WATER_COLOR = new Color(64, 64, 164);
+    private static final Color LOW_WATER_COLOR = new Color(32,32, 64);
 
     ////////////////////////////////////////////////////////////////////////////////
     // World Settings //////////////////////////////////////////////////////////////
@@ -38,15 +29,15 @@ public class Location {
     public static final float MIN_HEIGHT = 0;
     public static final float MAX_HEIGHT = 100;
 
-    public static final float MIN_ARIDITY = 0;
-    public static final float MAX_ARIDITY = 1;
+    public static final float OCEAN_HEIGHT = 45;
+    public static final float SNOW_HEIGHT = 85;
 
-    public static final float OCEAN_HEIGHT = 10;
-    public static final float SNOW_HEIGHT = 90;
+    public static final float FOOD_GROWTH_SPEED = 10;
+    public static final float FOOD_MAX_CAPACITY = 100;
 
-    public static final float MAX_FOOD_DENSITY = 200;
-    public static final float FOOD_GROWTH_EXPONENT = 1.5f;
-    public static final float ARIDITY_THRESHOLD = 500;
+    public static final float ARIDITY_MIN_ATTENUATION = 1f;
+    public static final float ARIDITY_MAX_ATTENUATION = 100f;
+    public static final float ARIDITY_DESERT_THRESHOLD = 32;
 
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -77,20 +68,48 @@ public class Location {
         return height >= SNOW_HEIGHT;
     }
 
+    public boolean isDesert() { return aridity > 0.95f; }
+
     public Color getColor() {
-        //Under water => Always
-        if (isWater()) return new Color(WATER_COLOR_R, WATER_COLOR_G, WATER_COLOR_B);
-        if (isSnow()) return new Color(SNOW_COLOR_R, SNOW_COLOR_G,SNOW_COLOR_B);
+        if (isSnow()) return SNOW_COLOR;
+        if (isDesert()) return DESERT_COLOR;
+        if (height * 1.7 < OCEAN_HEIGHT) return LOW_WATER_COLOR;
+        if (height * 1.2 < OCEAN_HEIGHT) return MEDIUM_WATER_COLOR;
+        if (height * 1.0 < OCEAN_HEIGHT) return HIGH_WATER_COLOR;
+
 
         //map t between OCEAN & SNOW
         float t = Perlin.inverseLerp(height, OCEAN_HEIGHT, SNOW_HEIGHT);
         float altitude = Perlin.lerp(t, 0.0f, 1.0f);
-        return new Color(altitude, altitude, altitude);
+
+        //Rock Color (grayscale)
+        int rock = (int) Perlin.lerp(altitude, 128, 255);
+
+        //Food Color (green shade)
+        int foodR = (int) Perlin.lerp(altitude, LOW_GRASS_COLOR.getRed(), HIGH_GRASS_COLOR.getRed());
+        int foodG = (int) Perlin.lerp(altitude, LOW_GRASS_COLOR.getGreen(), HIGH_GRASS_COLOR.getGreen());
+        int foodB = (int) Perlin.lerp(altitude, LOW_GRASS_COLOR.getBlue(), HIGH_GRASS_COLOR.getBlue());
+
+        //Mix Colors
+        float tt = Perlin.inverseLerp(food, 0.0f, FOOD_MAX_CAPACITY);
+        int r = (int) Perlin.lerp(tt, rock, foodR);
+        int g = (int) Perlin.lerp(tt, rock, foodG);
+        int b = (int) Perlin.lerp(tt, rock, foodB);
+
+        return new Color(r, g, b);
     }
 
-    public float distanceSquared(Location location) {
-        float dx = x - location.x;
-        float dy = y - location.y;
-        return dx * dx + dy * dy;
+    public void update(float deltaTime) {
+        //Nothing to do on Water & Snow
+        if(isSnow()) return;
+        if (isWater()) return;
+        if (isDesert()) return;
+
+        float growthFactor = 1f / Perlin.lerp(aridity, ARIDITY_MIN_ATTENUATION, ARIDITY_MAX_ATTENUATION);
+        food += FOOD_GROWTH_SPEED * growthFactor * deltaTime;
+
+        //Cap if too much food is present
+        if (food >= FOOD_MAX_CAPACITY)
+            food = FOOD_MAX_CAPACITY;
     }
 }
