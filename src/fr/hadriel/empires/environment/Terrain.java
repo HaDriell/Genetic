@@ -1,6 +1,6 @@
-package fr.hadriel.empires;
+package fr.hadriel.empires.environment;
 
-import fr.hadriel.Perlin;
+import fr.hadriel.Util;
 
 import java.awt.*;
 
@@ -42,7 +42,7 @@ public class Terrain {
         float[] map = new float[width * height];
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                map[x + y * width] = Perlin.OctaveNoise(x, y, seed, scale, octaves, persistence, lacunarity);
+                map[x + y * width] = Util.OctaveNoise(x, y, seed, scale, octaves, persistence, lacunarity);
             }
         }
 
@@ -56,8 +56,8 @@ public class Terrain {
 
         //Remap HeightMap to [Location.MIN_HEIGHT; Location.MAX_HEIGHT]
         for (int i = 0; i < width * height; i++) {
-            float t = Perlin.inverseLerp(map[i], minHeight, maxHeight);
-            map[i] = Perlin.lerp(t, Location.MIN_HEIGHT, Location.MAX_HEIGHT);
+            float t = Util.inverseLerp(map[i], minHeight, maxHeight);
+            map[i] = Util.lerp(t, Location.MIN_HEIGHT, Location.MAX_HEIGHT);
         }
 
         return map;

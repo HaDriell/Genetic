@@ -1,6 +1,6 @@
-package fr.hadriel.empires;
+package fr.hadriel.empires.environment;
 
-import fr.hadriel.Perlin;
+import fr.hadriel.Util;
 
 import java.awt.*;
 import java.util.Objects;
@@ -60,6 +60,12 @@ public class Location {
         this.aridity = aridity;
     }
 
+    public float gatherFood(float capacity) {
+        float amount = Math.min(capacity, food);
+        food -= amount;
+        return amount;
+    }
+
     public boolean isWater() {
         return height <= OCEAN_HEIGHT;
     }
@@ -77,24 +83,23 @@ public class Location {
         if (height * 1.2 < OCEAN_HEIGHT) return MEDIUM_WATER_COLOR;
         if (height * 1.0 < OCEAN_HEIGHT) return HIGH_WATER_COLOR;
 
-
         //map t between OCEAN & SNOW
-        float t = Perlin.inverseLerp(height, OCEAN_HEIGHT, SNOW_HEIGHT);
-        float altitude = Perlin.lerp(t, 0.0f, 1.0f);
+        float t = Util.inverseLerp(height, OCEAN_HEIGHT, SNOW_HEIGHT);
+        float altitude = Util.lerp(t, 0.0f, 1.0f);
 
         //Rock Color (grayscale)
-        int rock = (int) Perlin.lerp(altitude, 128, 255);
+        int rock = (int) Util.lerp(altitude, 128, 255);
 
         //Food Color (green shade)
-        int foodR = (int) Perlin.lerp(altitude, LOW_GRASS_COLOR.getRed(), HIGH_GRASS_COLOR.getRed());
-        int foodG = (int) Perlin.lerp(altitude, LOW_GRASS_COLOR.getGreen(), HIGH_GRASS_COLOR.getGreen());
-        int foodB = (int) Perlin.lerp(altitude, LOW_GRASS_COLOR.getBlue(), HIGH_GRASS_COLOR.getBlue());
+        int foodR = (int) Util.lerp(altitude, LOW_GRASS_COLOR.getRed(), HIGH_GRASS_COLOR.getRed());
+        int foodG = (int) Util.lerp(altitude, LOW_GRASS_COLOR.getGreen(), HIGH_GRASS_COLOR.getGreen());
+        int foodB = (int) Util.lerp(altitude, LOW_GRASS_COLOR.getBlue(), HIGH_GRASS_COLOR.getBlue());
 
         //Mix Colors
-        float tt = Perlin.inverseLerp(food, 0.0f, FOOD_MAX_CAPACITY);
-        int r = (int) Perlin.lerp(tt, rock, foodR);
-        int g = (int) Perlin.lerp(tt, rock, foodG);
-        int b = (int) Perlin.lerp(tt, rock, foodB);
+        float tt = Util.inverseLerp(food, 0.0f, FOOD_MAX_CAPACITY);
+        int r = (int) Util.lerp(tt, rock, foodR);
+        int g = (int) Util.lerp(tt, rock, foodG);
+        int b = (int) Util.lerp(tt, rock, foodB);
 
         return new Color(r, g, b);
     }
@@ -105,7 +110,7 @@ public class Location {
         if (isWater()) return;
         if (isDesert()) return;
 
-        float growthFactor = 1f / Perlin.lerp(aridity, ARIDITY_MIN_ATTENUATION, ARIDITY_MAX_ATTENUATION);
+        float growthFactor = 1f / Util.lerp(aridity, ARIDITY_MIN_ATTENUATION, ARIDITY_MAX_ATTENUATION);
         food += FOOD_GROWTH_SPEED * growthFactor * deltaTime;
 
         //Cap if too much food is present

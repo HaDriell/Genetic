@@ -1,7 +1,7 @@
 package fr.hadriel;
 
 //https://rosettacode.org/wiki/Perlin_noise
-public class Perlin {
+public class Util {
     private static final int p[] = new int[512];
     private static final int permutation[] = {151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36,
             103, 30, 69, 142, 8, 99, 37, 240, 21, 10, 23, 190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62, 94, 252, 219,
@@ -28,6 +28,11 @@ public class Perlin {
     public static float lerp(float t, float a, float b) {
         return a + t * (b - a);
     }
+
+    public static int lerp(float t, int a, int b) {
+        return (int) (a + t * (b - a));
+    }
+
 
     public static float inverseLerp(float v, float a, float b) {
         return (v - a) / (b - a);

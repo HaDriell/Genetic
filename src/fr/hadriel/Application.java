@@ -1,6 +1,8 @@
 package fr.hadriel;
 
 import fr.hadriel.empires.World;
+import fr.hadriel.empires.ai.Characteristics;
+import fr.hadriel.empires.ai.Tribe;
 
 import javax.swing.*;
 import java.awt.*;
@@ -9,6 +11,7 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferStrategy;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Random;
 
 public class Application extends JFrame {
 
@@ -69,7 +72,13 @@ public class Application extends JFrame {
     }
 
     public static void main(String... args) {
-        World world = new World((int) Instant.now().toEpochMilli(), 2, 800, 450);
+        World world = new World((int) Instant.now().toEpochMilli(), 4, 1600, 900);
+
+        //TODO : load from a file instead
+        Random random = new Random();
+        for (int i = 0; i < 10; i++) {
+            world.spawnTribe(new Characteristics(random));
+        }
 
         new Application(world).mainloop();
     }
