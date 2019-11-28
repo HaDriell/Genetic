@@ -2,23 +2,22 @@ package fr.hadriel;
 
 import fr.hadriel.empires.World;
 import fr.hadriel.empires.ai.Characteristics;
-import fr.hadriel.empires.ai.Tribe;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.image.BufferStrategy;
+import java.io.File;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
-public class Application extends JFrame {
+public class ProgramDisplay extends JFrame {
 
     private final World world;
     private final Canvas canvas;
 
-    public Application(World world) {
+    public ProgramDisplay(World world) {
         this.world = world;
         this.canvas = new Canvas();
 
@@ -57,9 +56,17 @@ public class Application extends JFrame {
         Timer timer = new Timer();
 
         while (!Thread.interrupted()) {
+
+            if (timer.elapsed() > 0.016f) {
+                timer.reset();
+                update(0.1f);
+                render();
+            }
+            if(!Thread.interrupted()) continue;
+
             float dt = timer.elapsed();
             timer.reset();
-            update(dt);
+            update(0.1f);
             render();
 
             int frameTimeMS = (int) (timer.elapsed() * 1000);
@@ -72,14 +79,15 @@ public class Application extends JFrame {
     }
 
     public static void main(String... args) {
-        World world = new World((int) Instant.now().toEpochMilli(), 4, 1600, 900);
-
-        //TODO : load from a file instead
         Random random = new Random();
+        List<Characteristics> genomes = Helper.LoadOrGenerateAllGenomes(random);
+        World world = new World(random.nextInt(), 4, 800, 450);
+
         for (int i = 0; i < 10; i++) {
-            world.spawnTribe(new Characteristics(random));
+            Characteristics characteristics = genomes.get(random.nextInt(genomes.size()));
+            world.spawnTribe(characteristics, true);
         }
 
-        new Application(world).mainloop();
+        new ProgramDisplay(world).mainloop();
     }
 }

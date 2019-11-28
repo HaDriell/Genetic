@@ -2,15 +2,14 @@ package fr.hadriel.empires.ai;
 
 import fr.hadriel.empires.environment.Location;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 public class Village {
 
+    public static final int MIN_VILLAGE_DISTANCE = 10;
+
     public final Location location;
     public final Tribe tribe;
-    public final List<Peon> spawns;
 
     private float expansionism;
     private float food;
@@ -20,27 +19,29 @@ public class Village {
         this.tribe = Objects.requireNonNull(tribe);
         this.food = 0.0f;
         this.expansionism = 0.0f;
-        this.spawns = new ArrayList<>();
+    }
+
+    public void giveFood(float amount) {
+        food += amount;
     }
 
     public void update(float deltaTime) {
         //Gather food inplace for the Village
-        food += location.gatherFood(tribe.characteristics.gatheringCapacity);
+        food += location.gatherFood(tribe.characteristics.gatheringCapacity * deltaTime);
 
         //Process Births as long as there is food
         while (food >= tribe.characteristics.spawningFoodCost) {
             food -= tribe.characteristics.spawningFoodCost;
 
             //Check to spawn Colons or Peons
-            boolean spawnColon = false;
+            boolean founder = false;
+            expansionism += tribe.characteristics.expansionismNormalized;
             if (expansionism > 1.0f) {
                 expansionism -= 1.0f;
-                spawnColon = true;
-            } else {
-                expansionism += tribe.characteristics.expansionismNormalized;
+                founder = true;
             }
 
-            spawns.add(new Peon(tribe, location, spawnColon));
+            tribe.units.add(new Gatherer(tribe, location, founder));
         }
     }
 }

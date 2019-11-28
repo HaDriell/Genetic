@@ -17,13 +17,13 @@ public class Terrain {
         this.height = height;
         this.locations = new Location[width * height];
 
-        System.out.println("Generating Height Map");
+//        System.out.println("Generating Height Map");
         float[] heightmap = CreateHeightMap(scale, octaves, persistence, lacunarity);
 
-        System.out.println("Generating Aridity Map");
+//        System.out.println("Generating Aridity Map");
         float[] ariditymap = CreateAridityMap(heightmap);
 
-        System.out.println("Initializing Locations");
+//        System.out.println("Initializing Locations");
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 float h = heightmap[x + y * width];
@@ -32,10 +32,10 @@ public class Terrain {
             }
         }
 
-        System.out.println("Planting trees");
+//        System.out.println("Planting trees");
         update(100f);
 
-        System.out.println("Terrain ready");
+//        System.out.println("Terrain ready");
     }
 
     private float[] CreateHeightMap(float scale, int octaves, float persistence, float lacunarity) {

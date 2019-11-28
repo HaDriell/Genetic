@@ -68,6 +68,7 @@ public class Characteristics {
     public final float damage;
     public final float maxHealth;
     public final float gatheringCapacity;
+    public final int lineOfSight;
 
     public Characteristics(int force, int constitution, int vision, int agility, int expansionism) {
         //Assign characteristics
@@ -88,6 +89,7 @@ public class Characteristics {
         this.damage = calculateDamage();
         this.maxHealth = calculateMaxHealth();
         this.gatheringCapacity = calculateGatheringCapacity();
+        this.lineOfSight = calculateLineOfSight();
     }
 
     public Characteristics(Random random) {
@@ -100,15 +102,29 @@ public class Characteristics {
         );
     }
 
-    public Characteristics(Random random, Characteristics a, Characteristics b) {
-        //TODO : mutations
-        this(
-                random.nextBoolean() ? a.force : b.force,
-                random.nextBoolean() ? a.constitution : b.constitution,
-                random.nextBoolean() ? a.vision : b.vision,
-                random.nextBoolean() ? a.agility : b.agility,
-                random.nextBoolean() ? a.expansionism : b.expansionism
-        );
+    public static Characteristics CreateChild(Random random, Characteristics a, Characteristics b) {
+        int force, constitution, vision, agility, expansionism;
+        force           = random.nextBoolean() ? a.force : b.force;
+        constitution    = random.nextBoolean() ? a.constitution : b.constitution;
+        vision          = random.nextBoolean() ? a.vision : b.vision;
+        agility         = random.nextBoolean() ? a.agility : b.agility;
+        expansionism    = random.nextBoolean() ? a.expansionism : b.expansionism;
+
+        //Mutation happens rarely
+        if (random.nextFloat() < 0.001f) {
+            //New value
+            int value = Util.lerp(random.nextFloat(), Characteristics.MINIMUM_VALUE, Characteristics.MAXIMUM_VALUE);
+
+            //Select the gene to mutate
+            switch (random.nextInt(5)) {
+                case 0: force           = value; break;
+                case 1: constitution    = value; break;
+                case 2: vision          = value; break;
+                case 3: agility         = value; break;
+                case 4: expansionism    = value; break;
+            }
+        }
+        return new Characteristics(force, constitution, vision, agility, expansionism);
     }
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -147,6 +163,11 @@ public class Characteristics {
         return c;
     }
 
+    private int calculateLineOfSight() {
+        float v = visionNormalized * visionNormalized; // Square curve-like
+        int los = Util.lerp(v, 0, 10);
+        return 1 + los;
+    }
     ////////////////////////////////////////////////////////////////////////////////
     // Persistence Utilities ///////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////
@@ -159,42 +180,43 @@ public class Characteristics {
         }
     }
 
-    public static Characteristics Load(InputStream stream) {
+    public static Characteristics Load(InputStream stream) throws IOException {
         Properties properties = new Properties();
         int force, constitution, vision, agility, expansionism;
-        try {
-            //Load file
-            properties.load(stream);
 
-            //Parse properties
-            force           = Integer.parseInt(properties.getProperty(PROPERTY_FORCE));
-            constitution    = Integer.parseInt(properties.getProperty(PROPERTY_CONSTITUTION));
-            vision          = Integer.parseInt(properties.getProperty(PROPERTY_VISION));
-            agility         = Integer.parseInt(properties.getProperty(PROPERTY_AGILITY));
-            expansionism    = Integer.parseInt(properties.getProperty(PROPERTY_EXPANSIONISM));
+        //Load file
+        properties.load(stream);
 
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        //Parse properties
+        force           = Integer.parseInt(properties.getProperty(PROPERTY_FORCE));
+        constitution    = Integer.parseInt(properties.getProperty(PROPERTY_CONSTITUTION));
+        vision          = Integer.parseInt(properties.getProperty(PROPERTY_VISION));
+        agility         = Integer.parseInt(properties.getProperty(PROPERTY_AGILITY));
+        expansionism    = Integer.parseInt(properties.getProperty(PROPERTY_EXPANSIONISM));
+
         return new Characteristics(force, constitution, vision, agility, expansionism);
     }
 
     public void save(String path) {
         try (FileOutputStream stream = new FileOutputStream(path)) {
-            Properties properties = new Properties();
-
-            //Serialize fields
-            properties.put(PROPERTY_FORCE,          force);
-            properties.put(PROPERTY_CONSTITUTION,   constitution);
-            properties.put(PROPERTY_VISION,         vision);
-            properties.put(PROPERTY_AGILITY,        agility);
-            properties.put(PROPERTY_EXPANSIONISM,   expansionism);
-
-            //Store file
-            properties.store(stream, null);
+            save(stream);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void save(OutputStream stream) throws IOException {
+        Properties properties = new Properties();
+
+        //Serialize fields
+        properties.put(PROPERTY_FORCE,          "" + force);
+        properties.put(PROPERTY_CONSTITUTION,   "" + constitution);
+        properties.put(PROPERTY_VISION,         "" + vision);
+        properties.put(PROPERTY_AGILITY,        "" + agility);
+        properties.put(PROPERTY_EXPANSIONISM,   "" + expansionism);
+
+        //Store file
+        properties.store(stream, null);
     }
 
     public String toString() {
@@ -222,6 +244,7 @@ public class Characteristics {
                 ss.append(" ");
                 ss.append(String.format("Capacity : %04.2f", gatheringCapacity));
                 ss.append(" ");
+                ss.append(String.format("LoS : %3d", lineOfSight));
             }
             ss.append("]");
         }
@@ -229,5 +252,10 @@ public class Characteristics {
 
 
         return ss.toString();
+    }
+
+    public static void main(String... args) {
+        for (int i = 0; i < 10; i++)
+            System.out.println(new Characteristics(new Random()).toString());
     }
 }

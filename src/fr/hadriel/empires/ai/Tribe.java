@@ -7,23 +7,43 @@ import fr.hadriel.empires.environment.Location;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Predicate;
+import java.util.Random;
 
 public class Tribe {
+
+    private static int randomColorIndex = 0;
+    private static final Color[] CYCLE = {
+        Color.red,
+        Color.blue,
+        Color.green,
+        Color.pink,
+        Color.orange,
+        Color.darkGray,
+        Color.white,
+        Color.yellow,
+        Color.lightGray,
+        Color.magenta,
+        Color.black,
+        Color.cyan
+    };
+
+    private static Color nextColorInCycle() {
+        return CYCLE[randomColorIndex++ % CYCLE.length];
+    }
 
     public final World world;
 
     public final List<Village> villages;
-    public final List<Peon> peons;
+    public final List<Unit> units;
     public final Characteristics characteristics;
     public final Color color;
 
-    public Tribe(World world, Characteristics characteristics) {
+    public Tribe(World world, Characteristics characteristics, boolean randomColor) {
         this.world = world;
         this.characteristics = characteristics;
-        this.color = calculateColor(characteristics);
+        this.color = randomColor ? nextColorInCycle() : calculateColor(characteristics);
         this.villages = new ArrayList<>();
-        this.peons = new ArrayList<>();
+        this.units = new ArrayList<>();
     }
 
     public void update(float deltaTime) {
@@ -33,13 +53,20 @@ public class Tribe {
         }
 
         //Execute peons
-        for (Peon peon : peons) {
-            peon.update(deltaTime);
+        for (Unit unit : units) {
+            unit.update(deltaTime);
         }
     }
 
     public void removeDeads() {
-        peons.removeIf(peon -> !peon.isAlive());
+        List<Unit> deads = new ArrayList<>();
+        for (Unit unit : units) {
+            if (!unit.isAlive()) {
+                deads.add(unit);
+                world.removeUnitAtLocation(unit, unit.getLocation());
+            }
+        }
+        units.removeAll(deads);
     }
 
     public void render(Graphics2D g) {
@@ -48,8 +75,8 @@ public class Tribe {
             g.drawRect(village.location.x, village.location.y, 1, 1);
         }
 
-        for (Peon peon : peons) {
-            Location location = peon.getLocation();
+        for (Unit unit : units) {
+            Location location = unit.getLocation();
             g.fillRect(location.x, location.y, 1, 1);
         }
     }

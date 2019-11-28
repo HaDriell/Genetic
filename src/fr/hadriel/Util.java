@@ -1,5 +1,9 @@
 package fr.hadriel;
 
+import fr.hadriel.empires.ai.Characteristics;
+
+import java.awt.*;
+
 //https://rosettacode.org/wiki/Perlin_noise
 public class Util {
     private static final int p[] = new int[512];
@@ -23,6 +27,24 @@ public class Util {
 
     public static float fade(float t) {
         return t * t * t * (t * (t * 6 - 15) + 10);
+    }
+
+    public static int clamp(int value, int min, int max) {
+        if (value > max) return max;
+        if (value < min) return min;
+        return value;
+    }
+
+    public static Color lerp(float t, Color a, Color b) {
+            int red     = lerp(t, a.getRed(), b.getRed());
+            int green   = lerp(t, a.getGreen(), b.getGreen());
+            int blue    = lerp(t, a.getBlue(), b.getBlue());
+
+            red     = clamp(red, 0, 255);
+            green   = clamp(green, 0, 255);
+            blue    = clamp(blue, 0, 255);
+
+            return new Color(red, green, blue);
     }
 
     public static float lerp(float t, float a, float b) {

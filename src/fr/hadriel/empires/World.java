@@ -1,20 +1,20 @@
 package fr.hadriel.empires;
 
 
-import fr.hadriel.empires.ai.Characteristics;
-import fr.hadriel.empires.ai.Peon;
-import fr.hadriel.empires.ai.Tribe;
-import fr.hadriel.empires.ai.Village;
+import fr.hadriel.empires.ai.*;
 import fr.hadriel.empires.environment.Location;
 import fr.hadriel.empires.environment.Terrain;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
-import java.util.Random;
+import java.util.List;
 
 public class World {
+    public static final int TRIBE_STARTING_GATHERER_COUNT   = 10;
+    public static final float TRIBE_MINIMUM_DISTANCE_FACTOR = 0.1f;
+
+    private final Map<Location, List<Unit>> warUnits;
 
     public final List<Tribe> tribes;
     public final Terrain terrain;
@@ -25,13 +25,14 @@ public class World {
 
     public World(int seed, int scale, int width, int height) {
         this.tribes = new ArrayList<>();
+        this.warUnits = new HashMap<>();
         this.scale = scale;
         this.width = width;
         this.height = height;
         this.terrain = new Terrain(seed, width / scale, height / scale, 60f, 8, 0.5f, 1.7f);
     }
 
-    public void spawnTribe(Characteristics characteristics) {
+    public void spawnTribe(Characteristics characteristics, boolean randomColor) {
         Random random = new Random();
 
         int x, y;
@@ -53,7 +54,7 @@ public class World {
                     int dy = location.y - village.location.y;
 
                     //Must respect a minimum distance between 2 Villages
-                    if (Math.sqrt(dx * dx + dy * dy) <= 75)
+                    if (Math.sqrt(dx * dx + dy * dy) <= terrain.width * TRIBE_MINIMUM_DISTANCE_FACTOR)
                         continue spawnLocationFinding;
                 }
             }
@@ -61,14 +62,40 @@ public class World {
             break;
         }
         Location location = terrain.at(x, y);
-        Tribe tribe = new Tribe(this, characteristics);
+        Tribe tribe = new Tribe(this, characteristics, randomColor);
 
         tribe.villages.add(new Village(tribe, location));
-        for (int i = 0; i < 10; i++) {
-            tribe.peons.add(new Peon(tribe, location, false)); // start with 10 peons and no colons
+        for (int i = 0; i < TRIBE_STARTING_GATHERER_COUNT; i++) {
+            tribe.units.add(new Gatherer(tribe, location, false)); // start with 10 peons and no colons
         }
 
         tribes.add(tribe);
+    }
+
+    public void addUnitAtLocation(Unit unit, Location location) {
+        List<Unit> locals = warUnits.computeIfAbsent(location, key -> new ArrayList<>());
+        locals.add(unit);
+    }
+
+    public void moveUnit(Unit unit, Location location, Location target) {
+        removeUnitAtLocation(unit, location);
+        addUnitAtLocation(unit, target);
+    }
+
+    public void removeUnitAtLocation(Unit unit, Location location) {
+        List<Unit> locals = warUnits.get(location);
+        if (locals != null) { // should never skip but we're never too sure
+            locals.remove(unit);
+
+            //Clean-up Memory when nom ore locals.
+            if (locals.isEmpty())
+                warUnits.remove(location);
+        }
+    }
+
+    public List<Unit> getWarUnitsAtLocation(Location location) {
+        List<Unit> locals = warUnits.get(location);
+        return locals == null ? Collections.emptyList() : locals;
     }
 
     public void update(float deltaTime) {
@@ -76,6 +103,10 @@ public class World {
 
         for (Tribe tribe : tribes) {
             tribe.update(deltaTime);
+        }
+
+        for (Tribe tribe : tribes) {
+            tribe.removeDeads();
         }
     }
 
