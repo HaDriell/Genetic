@@ -1,6 +1,7 @@
 package fr.hadriel;
 
 import fr.hadriel.empires.ai.Characteristics;
+import fr.hadriel.empires.environment.Location;
 
 import java.awt.*;
 
@@ -23,6 +24,16 @@ public class Util {
         for (int i = 0; i < 256; i++) {
             p[256 + i] = p[i] = permutation[i];
         }
+    }
+
+    public static float distanceSquared(Location a, Location b) {
+        return distanceSquared(a.x, a.y, b.x, b.y);
+    }
+
+    public static float distanceSquared(float xa, float ya, float xb, float yb) {
+        float dx = xa - xb;
+        float dy = ya - yb;
+        return dx * dx + dy * dy;
     }
 
     public static float fade(float t) {

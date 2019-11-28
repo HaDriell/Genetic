@@ -21,6 +21,10 @@ public class Village {
         this.expansionism = 0.0f;
     }
 
+    public boolean isDestroyed() {
+        return false;
+    }
+
     public void giveFood(float amount) {
         food += amount;
     }
