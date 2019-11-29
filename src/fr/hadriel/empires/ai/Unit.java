@@ -56,6 +56,14 @@ public abstract class Unit {
         return false;
     }
 
+    public void attack() {
+        for (Unit unit : world.getWarUnitsAtLocation(getLocation())) {
+            //Ignore allies (and self)
+            if (unit.tribe == this.tribe) continue;
+            unit.receiveDamage(tribe.characteristics.damage);
+        }
+    }
+
     public void suicide() {
         health = 0;
     }

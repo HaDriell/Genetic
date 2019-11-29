@@ -13,6 +13,7 @@ public class Warrior extends Unit {
 
     public Warrior(Tribe tribe, Location location) {
         super(tribe, location);
+        System.out.println("Warrior");
     }
 
     public void update(float deltaTime) {
@@ -23,17 +24,29 @@ public class Warrior extends Unit {
             enemyUnit = selectNearestEnemyUnit();
         }
 
+        //Check for a Random Village to attack
         if (!checkForEnemyVillage()) {
             enemyVillage = selectRandomEnemyVillage();
         }
 
+        for (int moves = 0; moves < 3; moves++) {
+            if (!canMove()) break;
+            Location target = null;
 
+            if (enemyVillage != null) target = enemyVillage.location;
+            if (enemyUnit != null) target = enemyUnit.getLocation();
+            if (target == null) break; // No objective (village or enemy)
 
-        //Chase enemy in sight if any
-        if (enemyUnit != null) {
-
+            moveToward(target);
         }
-        //If at Enemy Village, damage it.
+
+        //Attack at location
+        attack();
+
+        //Arrived at the target. Damage the Village somehow
+        if (enemyVillage.location == getLocation()) {
+            //TODO : damage village
+        }
     }
 
     private boolean checkForEnemyUnit() {

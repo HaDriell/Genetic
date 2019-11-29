@@ -18,7 +18,7 @@ public class Gatherer extends Unit {
 
         if (!isFull()) {
             gatherFood(deltaTime);
-            attackEnemies();
+            attack();
         }
 
         if (canMakeVillage()) {
@@ -50,14 +50,6 @@ public class Gatherer extends Unit {
         if (!isAlive()) {
             getLocation().dropFood(food);
             food = 0.0f;
-        }
-    }
-
-    private void attackEnemies() {
-        for (Unit unit : world.getWarUnitsAtLocation(getLocation())) {
-            //Ignore allies (and self)
-            if (unit.tribe == this.tribe) continue;
-            unit.receiveDamage(tribe.characteristics.damage);
         }
     }
 
